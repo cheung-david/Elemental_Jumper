@@ -27,6 +27,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.dc.ElementalJumper.Controls;
 import com.dc.ElementalJumper.HorizontalMove;
@@ -45,8 +46,8 @@ public class Map implements Screen {
     private Skin skin;
     private Sprite cloud;
     private Sprite cloud2;
-    private Sprite bomb, weightChain, neutralPlat;
-    private Sprite background;
+    private Sprite bomb, weightChain, neutralPlat, neutralPlat2;
+    private Sprite background, background2;
     private Sprite stateIcon;
     private SpriteBatch spriteBatch;
     private BitmapFont font;
@@ -61,7 +62,7 @@ public class Map implements Screen {
     private final int VELOCITYITERATIONS = 8;
     private final int POSITIONITERATIONS = 3;
 
-    private Body box, ball, groundBody;
+    private Body box, ball, groundBody, initialPlat, startBox1, startBox2;
 
     private Player player;
     //protected HorizontalMove horizontalMove;
@@ -87,6 +88,7 @@ public class Map implements Screen {
     private int highScoreValue;
     public boolean paused = false;
     public final int MOVING_PLAT = 0;
+    private Sprite boxType;
 
     // Generate different sized fonts on the spot
     private BitmapFont createFont(FreeTypeFontGenerator generator, float dp)
@@ -112,11 +114,11 @@ public class Map implements Screen {
             pause.setVisible(true);
         }
         // Teleport to other side when at edge of screen
-        if(player.getBody().getPosition().x < bottomLeft.x)
+        if(player.getBody().getPosition().x < bottomLeft.x - 0.5f)
         {
             player.getBody().setTransform(bottomRight.x, player.getBody().getPosition().y, player.getBody().getAngle());
         }
-        else if (player.getBody().getPosition().x > bottomRight.x)
+        else if (player.getBody().getPosition().x > bottomRight.x + 0.5f)
         {
             player.getBody().setTransform(bottomLeft.x, player.getBody().getPosition().y, player.getBody().getAngle());
         }
@@ -147,7 +149,7 @@ public class Map implements Screen {
         camera.update();
 
         // Player falls off screen
-        if ((player.getBody().getPosition().y < camera.position.y - camera.viewportHeight / 2f) && player.getBody().getPosition().y > 3)
+        if ((player.getBody().getPosition().y < camera.position.y - camera.viewportHeight / 2f) && player.getBody().getPosition().y > 0)
         {
             player.setGameOver(true);
         }
@@ -157,7 +159,14 @@ public class Map implements Screen {
 
 
         // Set blue background
-        background.setPosition(camera.position.x - camera.viewportWidth / 2,  camera.position.y - camera.viewportHeight / 2);
+        if((player.getBody().getPosition().y) < 500)
+        {
+            background.setPosition(camera.position.x - camera.viewportWidth / 2, camera.position.y - camera.viewportHeight / 2);
+        }
+        else
+        {
+            background2.setPosition(camera.position.x - camera.viewportWidth / 2, camera.position.y - camera.viewportHeight / 2);
+        }
 
         // Draw new clouds
         // Determine if player is above 2 times the screen
@@ -215,13 +224,14 @@ public class Map implements Screen {
         else if(player.getBody().getPosition().y > 500) {
             mapGenerator.setMinDist(4.3f);
             mapGenerator.setMaxDist(6);
-            BOMB_FREQUENCY = 800;
+            BOMB_FREQUENCY = 1000;
             mapGenerator.setDifferentPlatformFreq(65);
+             mapGenerator.setMovingPlatformDifficulty(80);
         }
          else if(player.getBody().getPosition().y > 250) {
              mapGenerator.setMinDist(3.8f);
              mapGenerator.setMaxDist(6);
-             BOMB_FREQUENCY = 1000;
+             BOMB_FREQUENCY = 1200;
              mapGenerator.setDifferentPlatformFreq(70);
              mapGenerator.setMovingPlatformDifficulty(80);
          }
@@ -229,8 +239,8 @@ public class Map implements Screen {
         {
             mapGenerator.setMovingPlatformDifficulty(90);
             mapGenerator.setMinDist(3.3f);
-            mapGenerator.setDifferentPlatformFreq(75); // Lower number = increase in difficulty
-            BOMB_FREQUENCY = 1500; // Starting mode
+            mapGenerator.setDifferentPlatformFreq(70); // Lower number = increase in difficulty
+            BOMB_FREQUENCY = 1600; // Starting mode
         }
 
         // Current player score
@@ -271,7 +281,14 @@ public class Map implements Screen {
 
         spriteBatch.setProjectionMatrix(camera.combined);
         spriteBatch.begin();
-        background.draw(spriteBatch);
+        if(player.getBody().getPosition().y > 500)
+        {
+            background2.draw(spriteBatch);
+        }
+        else
+        {
+            background.draw(spriteBatch);
+        }
         cloud.draw(spriteBatch);
         cloud2.draw(spriteBatch);
         //font.draw(spriteBatch,"Max Height: " + heightScore , camera.position.x, camera.position.y + camera.viewportHeight / 3);
@@ -286,7 +303,7 @@ public class Map implements Screen {
         if(player.getBody().getPosition().y > BOMBS_AT_HEIGHT)
         {
             // How often bombs appear randomly
-            if(MathUtils.random(1, BOMB_FREQUENCY) < 2)
+            if(MathUtils.random(1, BOMB_FREQUENCY) == 8)
             {
                 BodyDef bodyDef = new BodyDef();
                 bodyDef.type = BodyDef.BodyType.KinematicBody;
@@ -298,7 +315,7 @@ public class Map implements Screen {
 
 
                 PolygonShape boxShape = new PolygonShape();
-                boxShape.setAsBox(0.3f,0.3f);
+                boxShape.setAsBox(0.2f,0.2f);
 
                 //fixture definition
                 fixtureDef.shape = boxShape;
@@ -418,12 +435,14 @@ public class Map implements Screen {
 
         // Load all background sprites
         background = new Sprite(new Texture("data/images/bg.png"));
+        background2 = new Sprite(new Texture("data/images/bg2.png"));
         stateIcon = new Sprite(new Texture("data/images/blueIcon.png"));
         cloud = new Sprite(new Texture("data/images/cloud1.png"));
         cloud2 = new Sprite(new Texture("data/images/cloud2.png"));
         bomb = new Sprite(new Texture("data/images/bomb.png"));
         weightChain = new Sprite(new Texture("data/images/weightChained.png"));
         neutralPlat = new Sprite(new Texture("data/images/boxplat.png"));
+        neutralPlat2 = new Sprite(new Texture("data/images/boxplat.png"));
         bomb.setSize(1, 1);
         weightChain.setSize(1, 1);
         neutralPlat.setSize(1.2f, 0.2f);
@@ -644,20 +663,43 @@ public class Map implements Screen {
         //circleShape.setRadius(.5f);
 
         PolygonShape boxShape = new PolygonShape();
-        boxShape.setAsBox(1.5f, 0.1f);
+        boxShape.setAsBox(1.6f, 0.14f);
 
         // Fixtures
         fixtureDef.shape = boxShape;
         fixtureDef.density = 10.1f; // per sq meter
-        fixtureDef.restitution = 0;
+        fixtureDef.restitution = 0.9f;
         fixtureDef.friction = 0;
         fixtureDef.filter.categoryBits = CATEGORY_NEUTRAL;
 
         //neutralPlat.setSize(1.6f,0.2f);
         ball = world.createBody(bodyDef);
-        neutralPlat.setSize(3f, 0.2f);
+        neutralPlat.setSize(3.2f, 0.25f);
         ball.setUserData(neutralPlat);
         ball.createFixture(fixtureDef);
+
+
+    /*    BodyDef bodyDef2 = new BodyDef();
+        bodyDef2.type = BodyDef.BodyType.DynamicBody;
+
+        FixtureDef fixtureDef2 = new FixtureDef();
+        bodyDef2.type = BodyDef.BodyType.StaticBody;
+
+        // Initial plat
+        neutralPlat2.setSize(1.6f, 0.25f);
+        bodyDef2.position.set(-4f, -1f);
+
+        boxShape.setAsBox(0.8f, 0.11f);
+        // Fixtures
+        fixtureDef2.shape = boxShape;
+        fixtureDef2.density = 10.1f; // per sq meter
+        fixtureDef2.restitution = 0f;
+        fixtureDef2.friction = 0;
+        fixtureDef2.filter.categoryBits = CATEGORY_NEUTRAL;
+
+        initialPlat = world.createBody(bodyDef2);
+        initialPlat.setUserData(neutralPlat2);
+        initialPlat.createFixture(fixtureDef2);*/
 
         //circleShape.dispose();
         boxShape.dispose();
@@ -669,20 +711,22 @@ public class Map implements Screen {
         //Screen Coordinates
         ChainShape groundShape = new ChainShape();
 
-        bottomLeft = new Vector3(0, Gdx.graphics.getHeight(), 0);
+        bottomLeft =    new Vector3(0, Gdx.graphics.getHeight(), 0);
         bottomRight = new Vector3(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 0);
         camera.unproject(bottomLeft);
         camera.unproject(bottomRight);
 
-
+        boxType = new Sprite(new Texture("data/images/boxplat.png"));
         groundShape.createChain(new float[]{bottomLeft.x, bottomLeft.y, bottomRight.x, bottomRight.y});
-
+        boxType.setSize(bottomRight.x - bottomLeft.x, 0.2f);
         fixtureDef.shape = groundShape;
         fixtureDef.friction = .4f;
         fixtureDef.restitution = 0;
         fixtureDef.filter.categoryBits = -1; // Collision with everything
 
+
         groundBody = world.createBody(bodyDef);
+;
         groundBody.createFixture(fixtureDef);
 
         bodyDef.position.set(0,0);
@@ -694,7 +738,7 @@ public class Map implements Screen {
         groundShape.dispose();
 
         // Initialize main map
-        mapGenerator = new MapGenerator(groundBody, bottomLeft.x, bottomRight.x, MIN_HEIGHT, MAX_HEIGHT,
+        mapGenerator = new MapGenerator(groundBody, bottomLeft.x + 0.1f, bottomRight.x - 0.1f, MIN_HEIGHT, MAX_HEIGHT,
                 player.WIDTH * 1.5f, player.WIDTH * 3, 0.001f, 0, Gdx.graphics.getHeight(), world);
 
 
@@ -723,6 +767,32 @@ public class Map implements Screen {
         world.createJoint(distanceJointDef);
 
 
+        // Starting Plat
+        bodyDef.position.set(3.8f, 0.3f);
+        bodyDef.fixedRotation = true;
+
+        PolygonShape startingBox = new PolygonShape();
+        startingBox.setAsBox(1.5f, 0.25f);
+
+        // Fixtures
+        fixtureDef.shape = startingBox;
+        fixtureDef.density = 10.1f; // per sq meter
+        fixtureDef.restitution = 0.8f;
+        fixtureDef.friction = 0;
+        fixtureDef.filter.categoryBits = CATEGORY_NEUTRAL;
+
+        //neutralPlat.setSize(1.6f,0.2f);
+        startBox1 = world.createBody(bodyDef);
+        neutralPlat.setSize(3.0f, 0.4f);
+        startBox1.setUserData(neutralPlat);
+        startBox1.createFixture(fixtureDef);
+
+        bodyDef.position.set(-3.8f, 0.3f);
+        startBox2 = world.createBody(bodyDef);
+        neutralPlat.setSize(3.0f, 0.4f);
+        startBox2.setUserData(neutralPlat);
+        startBox2.createFixture(fixtureDef);
+        startingBox.dispose();
         /* May be useful for future obstacles
 
         // Rope Joint Box to ground
@@ -767,10 +837,12 @@ public class Map implements Screen {
         textureAtlas.dispose();
         skin.dispose();
         background.getTexture().dispose();
+        background2.getTexture().dispose();
         cloud.getTexture().dispose();
         cloud2.getTexture().dispose();
         bomb.getTexture().dispose();
         shapeRenderer.dispose();
+        boxType.getTexture().dispose();
         font.dispose();
         if(AssetLoader.getSound()) {
             music.dispose();

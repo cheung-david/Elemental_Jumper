@@ -33,7 +33,6 @@ public class HorizontalMove {
     public void generateMovingPlat(Shape shape, short category, Sprite sprite, float posX, float posY, World world)
     {
 
-            Gdx.app.log("Test:", "passed");
             bodyDef.type = BodyDef.BodyType.KinematicBody;
 
             // Spawn bombs above viewport

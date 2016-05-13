@@ -37,7 +37,7 @@ public class Splash implements Screen {
     public void show()
     {
         spriteBatch = new SpriteBatch();
-        Texture texture = new Texture("badlogic.jpg");
+        Texture texture = new Texture("data/images/Splash.png");
 
         tweenManager = new TweenManager();
 
@@ -48,8 +48,8 @@ public class Splash implements Screen {
 
         // Splash Screen fade in and then fade out
         Tween.set(sprite, SpriteAccessor.OPACITY).target(0).start(tweenManager);
-        Tween.to(sprite, SpriteAccessor.OPACITY, 1.2f).target(1).start(tweenManager);
-        Tween.to(sprite, SpriteAccessor.OPACITY, 1.2f).target(0).delay(1f).setCallback(new TweenCallback() {
+        Tween.to(sprite, SpriteAccessor.OPACITY, 1.5f).target(1f).start(tweenManager);
+        Tween.to(sprite, SpriteAccessor.OPACITY, 1.5f).target(0).delay(1.5f).setCallback(new TweenCallback() {
             @Override
             public void onEvent(int type, BaseTween<?> source) {
                 ((Game) Gdx.app.getApplicationListener()).setScreen(new StartMenu());

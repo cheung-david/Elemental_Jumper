@@ -26,7 +26,7 @@ public class Player extends InputAdapter implements ContactFilter, ContactListen
     private Body body;
     private Vector2 velocity = new Vector2();
     private Sprite playerSprite, playerIdle, playerJR, playerJL, playerDuck;
-    private float moveForce = 0.039f, jumpHeight = 56;
+    private float moveForce = 0.032f, jumpHeight = 56;
     public final float HEIGHT, WIDTH;
     private final short CATEGORY_RED = 0x0040;
     private final short CATEGORY_GREEN = 0x0002; // 0000000000000010 in binary
@@ -112,9 +112,9 @@ public class Player extends InputAdapter implements ContactFilter, ContactListen
         {
 
 
-            if (Math.abs(acceleration) > 0.3f) // the accelerometer value is < -0.3 and > 0.3 , this means that is not really stable and the position should move
+            if (Math.abs(acceleration) > 0.4f) // the accelerometer value is < -0.4 and > 0.4 , this means that is not really stable and the position should move
             {
-                velocity.x -= acceleration / 10 * moveForce; // we move it
+                velocity.x -= acceleration / 12 * moveForce; // we move it
                 // now check for the animations
                 if (velocity.x > 0.15f)
                     velocity.x = 0.15f;
